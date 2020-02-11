@@ -8,13 +8,23 @@ int stop = 92;
 Servo rightMotor;
 Servo leftMotor;
 
+#define NEUTRAL 93
+
+
 void receivePacket() {
-  int lposDegrees = map(PS4.data.analog.stick.ly, -128, 127, 44, 142);
-  int rposDegrees = map(PS4.data.analog.stick.ry, -128, 127, 44, 142);
-  if(lposDegrees < 97 && lposDegrees > 87) lposDegrees = stop;
-  if(rposDegrees < 97 && rposDegrees > 87) rposDegrees = stop;
-  leftMotor.write(lposDegrees);
-  rightMotor.write(rposDegrees);
+  int L_mapped, R_mapped;
+
+  int L_bm = PS4.data.analog.stick.ly + PS4.data.analog.stick.lx;
+  int R_bm = PS4.data.analog.stick.lx - PS4.data.analog.stick.ly;
+
+  L_mapped = map(L_bm, 191, -191, 44, 142);
+  R_mapped = map(R_bm, 191, -191, 44, 142);
+  
+  if(L_mapped < 97 && L_mapped > 87) L_mapped = stop;
+  if(R_mapped < 97 && R_mapped > 87) R_mapped = stop;
+  
+  leftMotor.write(L_mapped);
+  rightMotor.write(R_mapped);
 }
 
 void controllerConnect() {
@@ -26,17 +36,14 @@ void setup() {
   Serial.begin(115200);
   rightMotor.attach(MRPin);
   leftMotor.attach(MLPin);
-  PS4.attach(receivePacket);
+  //PS4.attach(receivePacket);
   PS4.attachOnConnect(controllerConnect);
   PS4.begin("01:02:03:04:05:66");
 }
 
 void loop() {
     if(PS4.isConnected()) {
-      if ( PS4.event.analog_move.stick.ly ) {
-          Serial.print("Left Stick y at ");
-          Serial.println(PS4.data.analog.stick.lx, DEC);
-      }
+      receivePacket();
 
      
     }
